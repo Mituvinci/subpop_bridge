@@ -111,23 +111,29 @@ Evaluation is performed automatically at the end of training. Each run saves:
 
 ## Results
 
-### With group annotations (Table 1)
+### Worst-group accuracy (%) without group annotations (Table 1)
 
-| Dataset | ERM | DFR | GroupDRO | DPE | BRIDGE |
-|---------|-----|-----|----------|-----|--------|
-| Waterbirds | 72.4 | 90.2 | 90.6 | 92.5 | 92.3 |
-| CelebA | 41.1 | 88.9 | 88.6 | 91.9 | 92.7 |
-| MetaShift | 71.5 | 80.1 | 76.8 | 86.1 | 87.4 |
-| CheXpert | 60.7 | 70.5 | 73.2 | 71.1 | 76.1 |
-| CivilComments | 57.4 | 69.2 | 69.7 | 70.3 | 73.2 |
-| MultiNLI | 67.9 | 72.4 | 77.7 | 75.2 | 76.1 |
+| Dataset | ERM* | ERM* + DPE | ERM* + BRIDGE |
+|---------|------|------------|---------------|
+| Waterbirds | 77.9 | 94.1 | **94.2** |
+| CelebA | 66.5 | **84.6** | 73.5 |
+| CivilComments | 69.4 | 68.9 | **70.5** |
+| MultiNLI | 66.5 | 70.9 | **75.0** |
+| MetaShift | 80.0 | 83.6 | 81.0 |
+| CheXpert | 75.6 | 76.8 | 79.1 |
+| ImageNetBG | 86.4 | 88.1 | **89.1** |
+| Living17 | 53.3 | 63.0 | **66.0** |
 
-### Without group annotations (Table 2)
+### Worst-group accuracy (%) with group annotations (Table 2)
 
-| Dataset | ERM | DFR | DPE | BRIDGE |
-|---------|-----|-----|-----|--------|
-| ImageNetBG | 72.0 | -- | 79.1 | 79.1 |
-| Living17 | 56.3 | -- | 67.2 | 65.8 |
+| Dataset | ERM* | ERM* + DPE | ERM* + BRIDGE |
+|---------|------|------------|---------------|
+| Waterbirds | 80.0 | 94.1 | **94.2** |
+| CelebA | 67.4 | 90.3 | **90.8** |
+| CivilComments | 69.7 | 70.8 | **71.5** |
+| MultiNLI | 69.7 | 75.3 | 76.4 |
+| MetaShift | 80.5 | **91.7** | 90.5 |
+| CheXpert | 86.0 | 76.0 | **86.6** |
 
 ## Code Structure
 
