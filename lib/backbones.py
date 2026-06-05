@@ -1,22 +1,21 @@
 """Backbone factory for the subpopulation pipeline.
 
-Provides a uniform interface so s19 / s20 / s26 can swap between
+Provides a uniform interface so the ERM and BRIDGE stages can swap between
 CLIP ViT-B/32 (default, used for all current Table 2 numbers) and
 torchvision ResNet-50 (for DPE-style apples-to-apples comparisons,
 since DPE / SubpopBench use ResNet-50 backbones).
 
-Each backbone exposes the same surface as s19's CLIPVisualWithHead:
-    .visual                 — feature extractor returning (B, embed_dim)
-    .head                   — nn.Linear(embed_dim, num_labels)
-    .train_preprocess(img)  — torchvision-style transform
-    .val_preprocess(img)    — torchvision-style transform
-    .forward(x)             — (B, num_labels) logits
-    .save(path)             — torch.save({"visual": ..., "head": ...})
+Each backbone exposes the same surface as train_erm's CLIPVisualWithHead:
+    .visual                 â€” feature extractor returning (B, embed_dim)
+    .head                   â€” nn.Linear(embed_dim, num_labels)
+    .train_preprocess(img)  â€” torchvision-style transform
+    .val_preprocess(img)    â€” torchvision-style transform
+    .forward(x)             â€” (B, num_labels) logits
+    .save(path)             â€” torch.save({"visual": ..., "head": ...})
 
 Plus, exposed by the factory itself:
-    embed_dim               — int
-    block_regex             — regex string used by s20 to bucket params
-                              into "blocks" for per-block lambda search
+    embed_dim               â€” int
+    block_regex             â€” regex string for bucketing params by block
 
 Block regexes:
     clip_vit_b32 : r"transformer\\.resblocks\\.\\d+"
@@ -72,8 +71,8 @@ class ResNet50WithHead(nn.Module):
 
     The visual tower is the full ResNet-50 with the final fc replaced by
     nn.Identity, returning a (B, 2048) feature vector. The head is a
-    fresh Linear(2048, num_labels). For BRIDGE-specialist saves, only
-    the visual state_dict is merged across groups; the head stays fixed.
+    fresh Linear(2048, num_labels). The visual and head state_dicts are
+    saved separately so the encoder can be reused (frozen) downstream.
 
     Pretrained weights cache: by default torchvision downloads to
     ~/.cache/torch/hub/checkpoints. Compute nodes have no internet, so
@@ -194,7 +193,7 @@ def build_backbone(name: str, num_labels: int,
         import importlib, sys
         from pathlib import Path as _P
         sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
-        s19 = importlib.import_module("s19_subpop_train_vit")
+        s19 = importlib.import_module("train_erm")
         return s19.CLIPVisualWithHead(num_labels=num_labels,
                                        pretrained_path=pretrained_path)
     if name == "resnet50":
@@ -208,8 +207,7 @@ def build_backbone(name: str, num_labels: int,
     raise ValueError(f"Unknown backbone: {name}")
 
 
-# Convenience for the s20 merge: preserve "the EMBED_DIM constant"
-# semantics that the existing s26 code uses.
+# Convenience: preserve the EMBED_DIM constant used by the BRIDGE code.
 def embed_dim(name: str) -> int:
     return spec(name).embed_dim
 
