@@ -52,8 +52,7 @@ def create_or_resume_study(
         Each record must have keys: "trial" (int), lambda_key (dict[str, float]),
         "objective" (float).
     lambda_key
-        The JSON field holding the {param_name: value} dict. "lambdas" for
-        s15/s20.
+        The JSON field holding the {param_name: value} dict.
 
     Returns
         An Optuna study ready for study.optimize().
