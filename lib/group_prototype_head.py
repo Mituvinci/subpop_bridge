@@ -1,6 +1,6 @@
-"""s26-D -- Group-prototype IsoMax+ head on the BRIDGE-merged backbone.
+"""Group-prototype IsoMax+ head on a frozen BRIDGE backbone.
 
-Same setup as s26 (frozen merged ViT, train head only on a balanced
+Same setup as the IsoMax head (frozen ViT, train head only on a balanced
 subset of val), but the IsoMax+ head has G * C prototypes instead of C.
 Each (label_idx l, group_idx g) cell gets its own prototype p_{l,g}.
 At training time the loss matches the prototype indexed by the sample's
@@ -17,8 +17,8 @@ the head per-subgroup centers, which is the cheapest way to ask "does
 the head benefit from group structure at all, before we go ensemble?"
 
 Usage (CelebA, val attribute-balanced):
-    python experiments/s26d_bridge_group_proto.py --dataset celeba \\
-        --merged-ckpt results/s20_subpop_bridge_erm_celeba/combined/20260422_164100/merged_model.pt \\
+    python lib/group_prototype_head.py --dataset celeba \\
+        --merged-ckpt results/s19_subpop_vit/celeba/erm/<ts>/model_best_wga.pt \\
         --val-balance attribute --inference max --epochs 20
 """
 from __future__ import annotations
