@@ -16,12 +16,8 @@ source /shared/software/conda/etc/profile.d/conda.sh
 conda activate pytorch
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 export PYTHONNOUSERSITE=1
-export HF_HOME=/scratch/ha00014/hf_cache
-export HF_HUB_CACHE=/scratch/ha00014/hf_cache/hub
-export TRANSFORMERS_OFFLINE=1
-export HF_HUB_OFFLINE=1
 
-cd /scratch/ha00014/Halimas_projects/Mosaic_Helath_AI
+cd "$(dirname "$0")/.." || exit 1
 export PYTHONPATH="$(pwd):${PYTHONPATH:-}"
 mkdir -p logs
 
@@ -40,7 +36,7 @@ echo ""
 echo "=== STEP 1: ERM* backbone training ==="
 echo "Started: $(date)"
 
-python -u experiments/s19_subpop_train_vit.py \
+python -u train_erm.py \
     --dataset "$DATASET" \
     --method erm \
     --backbone "$BACKBONE" \
@@ -68,7 +64,7 @@ echo "Started: $(date)"
 
 for RS in 0.5 0.7 0.9; do
     echo "[chain] s26f rho=$RS val-balance=attribute seed=$SEED"
-    python -u experiments/s26f_bridge_structured_heads.py \
+    python -u train_bridge.py \
         --dataset "$DATASET" --backbone "$BACKBONE" \
         --merged-ckpt "$ERM_CKPT" \
         --val-balance attribute --inference max \
@@ -86,7 +82,7 @@ echo "Started: $(date)"
 
 for RS in 0.5 0.7 0.9; do
     echo "[chain] s26f rho=$RS --no-group-roles seed=$SEED"
-    python -u experiments/s26f_bridge_structured_heads.py \
+    python -u train_bridge.py \
         --dataset "$DATASET" --backbone "$BACKBONE" \
         --merged-ckpt "$ERM_CKPT" \
         --val-balance attribute --inference max \
