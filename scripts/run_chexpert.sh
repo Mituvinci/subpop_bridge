@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Full BRIDGE chain for Fitzpatrick: ERM* -> BRIDGE (attr + noattr)
+# Full BRIDGE chain for CheXpert: ERM* -> BRIDGE (attr + noattr)
 #
 # Usage:
-#   SEED=0 sbatch --time=06:00:00 --partition=gpu_2day \
-#     --mem=32G --gres=gpu:1 --cpus-per-task=8 \
-#     --job-name=chain_fitz_s0 \
-#     --output=logs/chain_fitz_s0_%j.out \
-#     --error=logs/chain_fitz_s0_%j.err \
-#     scripts/chain_fitzpatrick.sh
+#   SEED=0 sbatch --time=08:00:00 --partition=gpu_2day \
+#     --mem=48G --gres=gpu:1 --cpus-per-task=8 \
+#     --job-name=chain_chexpert_s0 \
+#     --output=logs/chain_chexpert_s0_%j.out \
+#     --error=logs/chain_chexpert_s0_%j.err \
+#     scripts/run_chexpert.sh
 
 set -eo pipefail
 
@@ -21,33 +21,25 @@ cd "$(dirname "$0")/.." || exit 1
 export PYTHONPATH="$(pwd):${PYTHONPATH:-}"
 mkdir -p logs
 
-DATASET=fitzpatrick
+DATASET=chexpert
 BACKBONE=resnet50
 SEED=${SEED:-0}
 
 echo "============================================================"
-echo "  Fitzpatrick BRIDGE chain (ERM* -> BRIDGE)"
-echo "  Seed=${SEED}  Job: ${SLURM_JOB_ID:-local}  Started: $(date)"
+echo "  BRIDGE chain: $DATASET (seed $SEED)"
+echo "  Job: ${SLURM_JOB_ID:-local}  Started: $(date)"
 echo "============================================================"
-nvidia-smi -L
 
-# ── Step 1: ERM* backbone training ───────────────────────────────
+# -- Step 1: ERM* backbone training --
 echo ""
 echo "=== STEP 1: ERM* backbone training ==="
 echo "Started: $(date)"
 
 python -u train_erm.py \
-    --dataset "$DATASET" \
-    --method erm \
-    --backbone "$BACKBONE" \
-    --batch-size 128 \
-    --epochs 120 \
-    --optimizer sgd \
-    --lr 1e-3 \
-    --weight-decay 0 \
-    --num-workers 8 \
-    --seed "$SEED" \
-    --out-dir results/erm_rn50
+    --dataset "$DATASET" --method erm --backbone "$BACKBONE" \
+    --batch-size 128 --epochs 120 --optimizer sgd \
+    --lr 1e-3 --weight-decay 0 --num-workers 8 \
+    --seed "$SEED" --out-dir results/erm_rn50
 
 echo "=== STEP 1 COMPLETE: $(date) ==="
 
@@ -57,7 +49,7 @@ if [ -z "$ERM_CKPT" ] || [ ! -f "$ERM_CKPT" ]; then
 fi
 echo "[chain] ERM* checkpoint: $ERM_CKPT"
 
-# ── Step 2: BRIDGE WITH attribute annotations ──────────────────────
+# -- Step 2: BRIDGE WITH attribute annotations --
 echo ""
 echo "=== STEP 2: BRIDGE WITH attribute annotations ==="
 echo "Started: $(date)"
@@ -75,7 +67,7 @@ done
 
 echo "=== STEP 2 COMPLETE: $(date) ==="
 
-# ── Step 3: BRIDGE WITHOUT attribute annotations ───────────────────
+# -- Step 3: BRIDGE WITHOUT attribute annotations --
 echo ""
 echo "=== STEP 3: BRIDGE WITHOUT attribute annotations ==="
 echo "Started: $(date)"
@@ -93,6 +85,7 @@ for RS in 0.5 0.7 0.9; do
 done
 
 echo "=== STEP 3 COMPLETE: $(date) ==="
+
 echo ""
 echo "============================================================"
 echo "  PIPELINE COMPLETE: $DATASET seed $SEED"
