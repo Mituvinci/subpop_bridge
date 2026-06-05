@@ -1,4 +1,4 @@
-"""s26-F -- Structured-specialization heads on the BRIDGE-merged backbone.
+"""Structured-specialization heads on a frozen BRIDGE backbone.
 
 Multiple group-prototype heads (each one is the s26-D head) trained
 jointly on the same batches but with different per-group sample
@@ -22,10 +22,10 @@ bootstrap, no symmetric ensemble. Closest precedent is mixture-of-
 experts, not DPE.
 
 Usage:
-    python experiments/s26f_bridge_structured_heads.py \\
+    python train_bridge.py \\
         --dataset celeba \\
         --backbone clip_vit_b32 \\
-        --merged-ckpt results/s20_subpop_bridge_erm_celeba/combined/<ts>/merged_model.pt \\
+        --merged-ckpt results/s19_subpop_vit/celeba/erm/<ts>/model_best_wga.pt \\
         --role-strength 0.7 --epochs 20 --val-balance attribute
 """
 from __future__ import annotations
