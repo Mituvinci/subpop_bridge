@@ -1,15 +1,15 @@
-"""s26 -- IsoMax+ prototype head on a frozen BRIDGE-merged backbone.
+"""IsoMax+ prototype head on a frozen BRIDGE backbone.
 
-Loads an s20-merged ViT-CLIP checkpoint (visual trunk + linear head),
+Loads a ViT-CLIP checkpoint (visual trunk + linear head),
 freezes the visual trunk, replaces the linear head with a single
 IsoMax+ prototype classifier (Macedo 2021), and fine-tunes only the
 head on a balanced subset of the validation split. Reports test-set
 worst-group accuracy / per-group accuracy / group gap.
 
 Usage (CelebA, mode A = val class-balanced, ~ DPE supervision "val"):
-    python experiments/s26_bridge_isomax_head.py \
+    python lib/isomax_head.py \
         --dataset celeba \
-        --merged-ckpt results/s20_subpop_bridge_erm_celeba/combined/20260422_164100/merged_model.pt \
+        --merged-ckpt results/s19_subpop_vit/celeba/erm/<ts>/model_best_wga.pt \
         --val-balance class \
         --epochs 20 --batch-size 256 --lr 5e-4 \
         --entropic-scale 30 --wd-weight 10
@@ -22,7 +22,7 @@ from the entropic OOD detection repo:
   https://github.com/dlmacedo/entropic-out-of-distribution-detection
 DPE acknowledges the same source; we do too. The single-head case (no
 ensemble, no IPS / cov_reg) is *not* DPE -- it's the Macedo head
-sitting on top of our merged backbone.
+sitting on top of our frozen backbone.
 """
 
 from __future__ import annotations
@@ -144,8 +144,8 @@ def select_balanced_indices(
 ) -> np.ndarray:
     """Pick a balanced subset of df row indices.
 
-    by="class": equal count per label_idx (mode A; ✓ supervision).
-    by="attribute": equal count per group_idx (mode B; ✓✓ supervision).
+    by="class": equal count per label_idx (mode A; âœ“ supervision).
+    by="attribute": equal count per group_idx (mode B; âœ“âœ“ supervision).
     """
     rng = np.random.default_rng(seed)
     if by == "class":
@@ -229,15 +229,15 @@ def main():
                     choices=["celeba", "waterbirds", "derm"])
     ap.add_argument("--backbone", default="clip_vit_b32",
                     choices=["clip_vit_b32", "resnet50"],
-                    help="Must match the backbone used in the merged ckpt.")
+                    help="Must match the backbone used in the checkpoint.")
     ap.add_argument("--merged-ckpt", type=Path, required=True,
-                    help="Path to the s20-merged checkpoint "
-                         "(saved by s20 as a torch.save of the "
+                    help="Path to the backbone checkpoint "
+                         "(a torch.save of the "
                          "CLIPVisualWithHead state_dict).")
     ap.add_argument("--val-balance", choices=["class", "attribute"],
                     default="class",
-                    help="class = mode A (DPE ✓), "
-                         "attribute = mode B (DPE ✓✓).")
+                    help="class = mode A (DPE âœ“), "
+                         "attribute = mode B (DPE âœ“âœ“).")
     ap.add_argument("--epochs", type=int, default=20)
     ap.add_argument("--batch-size", type=int, default=256)
     ap.add_argument("--lr", type=float, default=5e-4,
@@ -276,7 +276,7 @@ def main():
         raise ValueError(
             f"{args.merged_ckpt} has keys {list(state.keys())[:5]}; "
             "expected 'visual' (and optionally 'head'). Is this an "
-            "s20 merged_model.pt?"
+            "a valid backbone checkpoint?"
         )
     backbone.visual.load_state_dict(state["visual"])
     if "head" in state:
