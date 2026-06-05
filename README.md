@@ -35,10 +35,25 @@ BRIDGE uses the SubpopBench data format. Download datasets following [SubpopBenc
 | ImageNetBG | Image (AG) | 9 | 18 | [link](https://github.com/YyzHarry/SubpopBench) |
 | Living17 | Image (AG) | 17 | 34 | [link](https://github.com/YyzHarry/SubpopBench) |
 
+We additionally evaluate on two dermatology datasets as clinical case studies:
+
+| Dataset | Domain | Classes | Groups | Source |
+|---------|--------|---------|--------|--------|
+| HAM10000 | Dermoscopic | 2 (malignant/benign) | 4 (by sex) | [ISIC Archive](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T) |
+| Fitzpatrick | Clinical photos | 7 (skin conditions) | 2 (light/dark skin) | Unified from 4 sources |
+
+The Fitzpatrick dataset is assembled from:
+- [Fitzpatrick17k](https://github.com/mattgroh/fitzpatrick17k) (Groh et al., 2021)
+- [DDI](https://ddi-dataset.github.io/) (Daneshjou et al., 2022)
+- [Mafi](https://data.mendeley.com/datasets/xr8fw85n65/1) (Mafi et al., 2023)
+- DermaCon-IN (Madarkar et al., 2025)
+
 After downloading, prepare manifests:
 
 ```bash
 python data/prepare_subpopbench.py
+python data/prepare_ham10000.py
+python data/prepare_fitzpatrick.py
 ```
 
 ## Training
@@ -47,7 +62,7 @@ BRIDGE training follows a multi-stage pipeline. Each dataset has a self-containe
 
 ### Full pipeline (recommended)
 
-Each script chains: (1) ERM backbone training, (2) optional specialist merging, and (3) BRIDGE head training with multiple rho values.
+Each script chains: (1) ERM / ERM* backbone training and (2) BRIDGE head training with multiple rho values.
 
 ```bash
 # Example: Waterbirds
@@ -139,29 +154,28 @@ Evaluation is performed automatically at the end of training. Each run saves:
 
 ```
 subpop_bridge/
-├── README.md
-├── requirements.txt
-├── train_erm.py           # Stage 1: ERM backbone training
-├── train_bridge.py        # Stage 2: BRIDGE with group annotations
-├── train_bridge_ag.py     # Stage 2: BRIDGE AG (covariance diversification)
-├── merge_specialists.py   # Optional: Optuna-based specialist merging
-├── lib/
-│   ├── subpop_common.py   # Dataset loading, SubpopBench format
-│   └── backbones.py       # ResNet-50, DeBERTa backbones
-├── data/
-│   ├── prepare_subpopbench.py   # Manifest generation for SubpopBench
-│   ├── prepare_fitzpatrick.py   # Fitzpatrick skin lesion dataset
-│   └── prepare_ham10000.py      # HAM10000 dataset
-└── scripts/
-    ├── run_waterbirds.sh
-    ├── run_celeba.sh
-    ├── run_metashift.sh
-    ├── run_chexpert.sh
-    ├── run_civilcomments.sh
-    ├── run_multinli.sh
-    ├── run_imagenetbg.sh
-    ├── run_living17.sh
-    └── run_fitzpatrick.sh
+â”œâ”€â”€ README.md
+â”œâ”€â”€ requirements.txt
+â”œâ”€â”€ train_erm.py           # Stage 1: ERM backbone training
+â”œâ”€â”€ train_bridge.py        # Stage 2: BRIDGE with group annotations
+â”œâ”€â”€ train_bridge_ag.py     # Stage 2: BRIDGE AG (covariance diversification)
+â”œâ”€â”€ lib/
+â”‚   â”œâ”€â”€ subpop_common.py   # Dataset loading, SubpopBench format
+â”‚   â””â”€â”€ backbones.py       # ResNet-50, DeBERTa backbones
+â”œâ”€â”€ data/
+â”‚   â”œâ”€â”€ prepare_subpopbench.py   # Manifest generation for SubpopBench
+â”‚   â”œâ”€â”€ prepare_fitzpatrick.py   # Fitzpatrick skin lesion dataset
+â”‚   â””â”€â”€ prepare_ham10000.py      # HAM10000 dataset
+â””â”€â”€ scripts/
+    â”œâ”€â”€ run_waterbirds.sh
+    â”œâ”€â”€ run_celeba.sh
+    â”œâ”€â”€ run_metashift.sh
+    â”œâ”€â”€ run_chexpert.sh
+    â”œâ”€â”€ run_civilcomments.sh
+    â”œâ”€â”€ run_multinli.sh
+    â”œâ”€â”€ run_imagenetbg.sh
+    â”œâ”€â”€ run_living17.sh
+    â””â”€â”€ run_fitzpatrick.sh
 ```
 
 ## License
