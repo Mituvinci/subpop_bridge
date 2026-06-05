@@ -16,13 +16,13 @@ Model selection: last epoch (no val-based early stopping), matching DPE's
 -ec last setting for AG datasets.
 
 Usage:
-    python experiments/s26g_ag_bridge_cov.py \
+    python train_bridge_ag.py \
         --dataset living17 \
         --backbone resnet50 \
         --merged-ckpt results/.../model.pt \
         --cov-reg 1e5 --lr 5e-5 --epochs 30
 
-    python experiments/s26g_ag_bridge_cov.py \
+    python train_bridge_ag.py \
         --dataset imagenetbg \
         --backbone resnet50 \
         --merged-ckpt results/.../model_best_wga.pt \
