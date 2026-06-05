@@ -3,9 +3,8 @@ subpop_common.py - Shared utilities for the sub-population shift pipeline
 (paper Table B: derm / CelebA / Waterbirds).
 
 Consumers:
-    s19_subpop_train_vit.py     (ERM / GroupDRO / BRIDGE-specialist trainer)
-    s20_subpop_bridge_merge_vit.py (Optuna merge over BRIDGE specialists)
-    s21_aggregate_subpop.py     (Table B aggregator)
+    train_erm.py     (ERM / GroupDRO trainer)
+    train_bridge.py  (BRIDGE head training)
 
 What lives here (backbone-agnostic):
     - Manifest loader that reads the s18-emitted CSV + label/group JSONs.
@@ -77,7 +76,7 @@ def load_manifest(name: str, manifest_dir: Optional[Path] = None) -> SubpopManif
     for p in (csv_path, labels_path, groups_path):
         if not p.exists():
             raise FileNotFoundError(
-                f"Missing {p}. Run `python experiments/s18_subpop_data_prep.py`."
+                f"Missing {p}. Run `python data/prepare_subpopbench.py`."
             )
     df = pd.read_csv(csv_path)
     with open(labels_path) as f:
@@ -94,7 +93,7 @@ def load_manifest(name: str, manifest_dir: Optional[Path] = None) -> SubpopManif
 class SubpopImageDataset(Dataset):
     """Returns (image_tensor, label_idx, group_idx) triples.
 
-    The caller supplies `preprocess` — typically CLIP's val_preprocess for
+    The caller supplies `preprocess` â€” typically CLIP's val_preprocess for
     ViT-B/32 or LLaVA's image processor for LLaMA. This keeps the dataset
     backbone-agnostic.
     """
@@ -371,9 +370,9 @@ def collect_preds_and_losses(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Like collect_predictions, but also returns per-sample CE loss.
 
-    Used by BRIDGE-DRO's merge-time objective: we need per-group
-    cross-entropy (not just accuracy) to run Sagawa 2020's adversarial
-    group-weight dynamics over the lambda search.
+    Used by the group-DRO objective: we need per-group cross-entropy
+    (not just accuracy) to run Sagawa 2020's adversarial group-weight
+    dynamics.
     """
     import torch.nn.functional as F
     model.eval()
@@ -410,8 +409,8 @@ def dro_weighted_loss(pg_loss: Dict[int, float], step_size: float = 0.01
                       ) -> Tuple[float, Dict[int, float]]:
     """Sagawa 2020 robust loss in closed form (stateless per call).
 
-    Because per-group losses on the full val split are deterministic at
-    merge time (no minibatch noise), the exponentiated-gradient dynamics
+    Because per-group losses on the full val split are deterministic
+    (no minibatch noise), the exponentiated-gradient dynamics
     reduce to a single softmax-weighted sum:
 
         q_g       = softmax(eta * L_g)
