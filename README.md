@@ -150,33 +150,7 @@ Evaluation is performed automatically at the end of training. Each run saves:
 | MetaShift | 80.5 | **91.7** | 90.5 |
 | CheXpert | 86.0 | 76.0 | **86.6** |
 
-## Code Structure
 
-```
-subpop_bridge/
-â”œâ”€â”€ README.md
-â”œâ”€â”€ requirements.txt
-â”œâ”€â”€ train_erm.py           # Stage 1: ERM backbone training
-â”œâ”€â”€ train_bridge.py        # Stage 2: BRIDGE with group annotations
-â”œâ”€â”€ train_bridge_ag.py     # Stage 2: BRIDGE AG (covariance diversification)
-â”œâ”€â”€ lib/
-â”‚   â”œâ”€â”€ subpop_common.py   # Dataset loading, SubpopBench format
-â”‚   â””â”€â”€ backbones.py       # ResNet-50, DeBERTa backbones
-â”œâ”€â”€ data/
-â”‚   â”œâ”€â”€ prepare_subpopbench.py   # Manifest generation for SubpopBench
-â”‚   â”œâ”€â”€ prepare_fitzpatrick.py   # Fitzpatrick skin lesion dataset
-â”‚   â””â”€â”€ prepare_ham10000.py      # HAM10000 dataset
-â””â”€â”€ scripts/
-    â”œâ”€â”€ run_waterbirds.sh
-    â”œâ”€â”€ run_celeba.sh
-    â”œâ”€â”€ run_metashift.sh
-    â”œâ”€â”€ run_chexpert.sh
-    â”œâ”€â”€ run_civilcomments.sh
-    â”œâ”€â”€ run_multinli.sh
-    â”œâ”€â”€ run_imagenetbg.sh
-    â”œâ”€â”€ run_living17.sh
-    â””â”€â”€ run_fitzpatrick.sh
-```
 
 ## License
 
