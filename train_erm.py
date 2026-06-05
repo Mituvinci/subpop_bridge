@@ -1,5 +1,5 @@
 """
-s19_subpop_train_vit.py - Train CLIP ViT-B/32 specialists for Table B
+train_erm.py - Train CLIP ViT-B/32 specialists for Table B
 (sub-population shift: derm / CelebA / Waterbirds).
 
 Three training methods exposed through `--method`:
@@ -9,18 +9,15 @@ Three training methods exposed through `--method`:
     groupdro          : Sagawa et al. 2020, online exponentiated
                         gradient on per-group weights. Baseline.
     bridge_specialist : ERM-style fine-tune on a single group's images.
-                        Produces one checkpoint per group. s20 later
-                        merges these per-group specialists with an
-                        Optuna search over per-block lambdas.
+                        Produces one checkpoint per group (ablation only).
 
 Backbone: open_clip ViT-B/32 visual encoder + a linear classification
 head sized to the dataset. The CLIP text tower is not used (we are not
 doing zero-shot here; we are fine-tuning for a specific supervised
-task). BRIDGE-specialist saves the visual encoder weights and the head
-separately so s20 can merge encoders while keeping the head fixed.
+task). The visual encoder weights and the head are saved separately.
 
 Shared utilities (manifest loader, group sampler, GroupDRO loss,
-per-group metrics) live in experiments/lib/subpop_common.py.
+per-group metrics) live in lib/subpop_common.py.
 
 Output layout under `--out-dir`:
     {dataset}/{method}[/group_{g}]/{timestamp}/
@@ -32,17 +29,17 @@ Output layout under `--out-dir`:
 
 Usage:
     # ERM on derm (all groups):
-    python experiments/s19_subpop_train_vit.py --dataset derm --method erm
+    python train_erm.py --dataset derm --method erm
 
     # GroupDRO on CelebA:
-    python experiments/s19_subpop_train_vit.py --dataset celeba --method groupdro
+    python train_erm.py --dataset celeba --method groupdro
 
     # BRIDGE specialist on Waterbirds group 2 (waterbird_on_land):
-    python experiments/s19_subpop_train_vit.py --dataset waterbirds \\
+    python train_erm.py --dataset waterbirds \\
         --method bridge_specialist --group-idx 2
 
 Smoke (1 epoch, tiny batch, cpu ok):
-    python experiments/s19_subpop_train_vit.py --dataset derm --method erm \\
+    python train_erm.py --dataset derm --method erm \\
         --epochs 1 --batch-size 8 --smoke
 """
 from __future__ import annotations
@@ -122,12 +119,12 @@ CLIP_MODEL_NAME = "ViT-B-32"
 CLIP_PRETRAINED = "openai"
 EMBED_DIM = 512
 
-# Compute nodes have no internet. Pre-download the OpenAI ViT-B/32 weights
-# on the login node into this dir (filename must stay 'ViT-B-32.pt' to match
-# open_clip's URL basename lookup), and open_clip will load from cache
-# instead of trying to hit openaipublic.azureedge.net.
+# open_clip caches the OpenAI ViT-B/32 weights here; override with the
+# OPENCLIP_CACHE_DIR env var. On an offline machine, pre-download
+# 'ViT-B-32.pt' into this dir (filename must match open_clip's URL basename);
+# otherwise open_clip downloads it on first use.
 CLIP_CACHE_DIR = os.environ.get(
-    "OPENCLIP_CACHE_DIR", "/scratch/ha00014/hf_cache/openclip"
+    "OPENCLIP_CACHE_DIR", os.path.expanduser("~/.cache/openclip")
 )
 
 
@@ -139,10 +136,9 @@ class CLIPVisualWithHead(nn.Module):
     """open_clip ViT-B/32 visual tower + linear classification head.
 
     The visual tower returns a 512-dim embedding. The head is a single
-    Linear(512, num_labels). For BRIDGE-specialist saves, the visual
-    state_dict is what s20 merges across groups; the head stays fixed
-    (all specialists share the same head trained on all-groups ERM,
-    or their own head - we save both and let s20 pick).
+    Linear(512, num_labels). The visual encoder and head are saved
+    separately so the encoder can be reused (frozen) by the BRIDGE
+    head-training stage.
     """
 
     def __init__(self, num_labels: int, pretrained_path: Optional[str] = None):
